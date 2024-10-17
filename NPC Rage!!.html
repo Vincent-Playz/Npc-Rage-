@@ -118,12 +118,13 @@
     <script>
         let playerPosition = { x: 5, y: 5 }; // Start in the middle of the grid
         let playerSize = 30; // Initial player size
-        let playerGrowthRate = 10; // Growth rate of the player
+        let playerGrowthRate = 5; // Growth rate of the player
         let playerRange = 1; // Initial range to eat NPCs
         let playerName = ''; // Store player name
         let playerDiv; // Reference to the player div
         let npcs = []; // Array to hold NPC positions
         let points = 0; // Player points
+        const maxPlayerSize = 40; // Maximum player size (equals to one grid cell size)
 
         const gameBoard = document.getElementById('gameBoard');
         const scoreElement = document.getElementById('score');
@@ -185,7 +186,12 @@
                 if (distance <= playerRange) {
                     // Remove the NPC, grow the player, and increase the score and points
                     npcs.splice(index, 1); // Remove NPC from the array
-                    playerSize += playerGrowthRate; // Increase player's size
+                    if (playerSize < maxPlayerSize) {
+                        playerSize += playerGrowthRate; // Increase player's size but limit to maxPlayerSize
+                        if (playerSize > maxPlayerSize) {
+                            playerSize = maxPlayerSize; // Cap player size at the maximum value
+                        }
+                    }
                     points += 5; // Gain 5 points per NPC
                     scoreElement.textContent = `Size: ${playerSize}`; // Update the size display
                     pointsElement.textContent = `Points: ${points}`; // Update points display
@@ -230,9 +236,9 @@
         upgradeSizeButton.addEventListener('click', () => {
             if (points >= 30) {
                 points -= 30;
-                playerGrowthRate += 5; // Increase growth rate
+                playerGrowthRate += 1; // Increase growth rate
                 pointsElement.textContent = `Points: ${points}`;
-                alert('Size upgrade! You will grow faster.');
+                alert('Size upgrade purchased! You will grow faster when eating NPCs.');
             } else {
                 alert('Not enough points for Size upgrade!');
             }
