@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eat NPC Game with Click-to-Move</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+            background-color: #f0f0f0;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 5px;
+            border: 2px solid #000;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .player {
+            width: 40px;
+            height: 40px;
+            background-color: red;
+            border-radius: 50%;
+            position: relative;
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .npc {
+            width: 30px;
+            height: 30px;
+            background-color: blue;
+            border-radius: 50%;
+        }
+
+        .name-tag {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fff;
+            padding: 3px 5px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: 1px solid #ccc;
+            color: #333;
+        }
+
+        .score {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+
+        .name-input {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Eat NPC Game with Click-to-Move</h1>
+
+    <!-- Player Name Input -->
+    <div class="name-input">
+        <label for="playerName">Enter your name: </label>
+        <input type="text" id="playerName" placeholder="Enter name" />
+        <button id="startGameButton">Start Game</button>
+    </div>
+
+    <div class="game-board" id="gameBoard">
+        <!-- Game grid cells will go here -->
+        <div class="cell" id="cell-0-0"></div>
+        <div class="cell" id="cell-0-1"></div>
+        <div class="cell" id="cell-0-2"></div>
+        <div class="cell" id="cell-0-3"></div>
+        <div class="cell" id="cell-0-4"></div>
+
+        <div class="cell" id="cell-1-0"></div>
+        <div class="cell" id="cell-1-1"></div>
+        <div class="cell" id="cell-1-2"></div>
+        <div class="cell" id="cell-1-3"></div>
+        <div class="cell" id="cell-1-4"></div>
+
+        <div class="cell" id="cell-2-0"></div>
+        <div class="cell" id="cell-2-1"></div>
+        <div class="cell" id="cell-2-2"></div>
+        <div class="cell" id="cell-2-3"></div>
+        <div class="cell" id="cell-2-4"></div>
+
+        <div class="cell" id="cell-3-0"></div>
+        <div class="cell" id="cell-3-1"></div>
+        <div class="cell" id="cell-3-2"></div>
+        <div class="cell" id="cell-3-3"></div>
+        <div class="cell" id="cell-3-4"></div>
+
+        <div class="cell" id="cell-4-0"></div>
+        <div class="cell" id="cell-4-1"></div>
+        <div class="cell" id="cell-4-2"></div>
+        <div class="cell" id="cell-4-3"></div>
+        <div class="cell" id="cell-4-4"></div>
+    </div>
+
+    <div class="score" id="score">Size: 40</div>
+
+    <script>
+        let playerPosition = { x: 2, y: 2 }; // Start in the middle of the grid
+        let playerSize = 40; // Initial player size
+        let playerGrowthRate = 10; // Growth rate of the player
+        let playerName = ''; // Store player name
+        let playerDiv; // Reference to the player div
+        let npcs = []; // Array to hold NPC positions
+
+        const gameBoard = document.getElementById('gameBoard');
+        const scoreElement = document.getElementById('score');
+        const nameInput = document.getElementById('playerName');
+        const startGameButton = document.getElementById('startGameButton');
+        const gridSize = 5; // Size of the grid
+
+        // Function to generate new NPCs at random positions
+        function generateNpcs() {
+            npcs = [];
+            for (let i = 0; i < 5; i++) { // Generate 5 NPCs
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * gridSize);
+                    y = Math.floor(Math.random() * gridSize);
+                } while (npcs.some(npc => npc.x === x && npc.y === y) || (x === playerPosition.x && y === playerPosition.y)); // Ensure no overlap with player
+                npcs.push({ x, y });
+            }
+        }
+
+        // Function to update the player's position and size
+        function updatePlayerPosition() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.innerHTML = ''; // Clear all cells
+            });
+
+            const playerCell = document.getElementById(`cell-${playerPosition.x}-${playerPosition.y}`);
+            playerDiv = document.createElement('div');
+            playerDiv.classList.add('player');
+            playerDiv.style.width = `${playerSize}px`;
+            playerDiv.style.height = `${playerSize}px`;
+            playerCell.appendChild(playerDiv);
+
+            // Create and show the player's name over their head
+            const nameTag = document.createElement('div');
+            nameTag.classList.add('name-tag');
+            nameTag.textContent = playerName;  // Set the player's name
+            playerCell.appendChild(nameTag);
+
+            // Check if the player eats an NPC
+            npcs.forEach((npc, index) => {
+                if (npc.x === playerPosition.x && npc.y === playerPosition.y) {
+                    // Remove the NPC, grow the player, and increase the score
+                    npcs.splice(index, 1); // Remove NPC from the array
+                    playerSize += playerGrowthRate; // Increase player's size
+                    scoreElement.textContent = `Size: ${playerSize}`; // Update the size display
+                }
+            });
+
+            // Add NPCs back to their respective positions
+            npcs.forEach(npc => {
+                const npcCell = document.getElementById(`cell-${npc.x}-${npc.y}`);
+                const npcDiv = document.createElement('div');
+                npcDiv.classList.add('npc');
+                npcCell.appendChild(npcDiv);
+            });
+
+            // If all NPCs are eaten, reset NPCs but not the player size
+            if (npcs.length === 0) {
+                resetNpcs();
+            }
+        }
+
+        // Function to make NPCs move away from the player
+        function moveNpcAway(npc) {
+            const directions = [
+                { x: -1, y: 0 }, // Up
+                { x: 1, y: 0 }, // Down
+                { x: 0, y: -1 }, // Left
+                { x: 0, y: 1 }  // Right
+            ];
+
+            // Find direction to move away from the player
+            let bestMove = null;
+            let maxDistance = -1;
+
+            directions.forEach(direction => {
+                const newX = npc.x + direction.x;
+                const newY = npc.y + direction.y;
+                const distance = Math.sqrt(Math.pow(playerPosition.x - newX, 2) + Math.pow(playerPosition.y - newY, 2));
+
+                // Check if the move is within bounds
+                if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
+                    if (distance > maxDistance) {
+                        maxDistance = distance;
+                        bestMove = { x: newX, y: newY };
+                    }
+                }
+            });
+
+            // Update NPC position
+            if (bestMove) {
+                npc.x = bestMove.x;
+                npc.y = bestMove.y;
+            }
+        }
+
+        // Function to reset NPCs
+        function resetNpcs() {
+            generateNpcs();
+            updatePlayerPosition(); // Reposition player after NPC reset
+        }
+
+        // Handle player click to move
+        gameBoard.addEventListener('click', event => {
+            const cellId = event.target.id;
+            if (!cellId) return;
+
+            const [cellX, cellY] = cellId.split('-').slice(1).map(Number);
+            if (cellX >= 0 && cellX < gridSize && cellY >= 0 && cellY < gridSize) {
+                playerPosition.x = cellX;
+                playerPosition.y = cellY;
+                updatePlayerPosition();
+            }
+        });
+
+        // Start game function
+        function startGame() {
+            playerName = nameInput.value.trim();
+            if (!playerName) {
+                alert("Please enter a name to start the game!");
+                return;
+            }
+
+            // Hide name input and start the game
+            document.querySelector('.name-input').style.display = 'none';
+            resetNpcs(); // Initialize NPCs and player
+            updatePlayerPosition(); // Position player
+        }
+
+        // Move NPCs every second
+        setInterval(() => {
+            npcs.forEach(moveNpcAway);
+            updatePlayerPosition(); // Recheck player position after NPC movement
+        }, 1000);
+
+        startGameButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
+
+
